@@ -14,32 +14,32 @@ module.exports = {
     let reply = "";
     chains = new Map();
     let allMessages = new Discord.Collection();
-    let idSet = new Set(); // temporary while confirming that msgs.last() is the oldest message
-    let fails = 0;
-    const messageManager = message.channel.messages;
 
-    function fetchAllMsgs(limit = 100, before = null) {
-      return messageManager
+    let channels = message.guild.channels.cache.filter((ch) => {
+      return ch.type === "text" && ch.viewable;
+    });
+    console.log(
+      "channels: ",
+      channels.map((ch) => {
+        return ch.name;
+      })
+    );
+
+    function fetchChannelMsgs(channel, limit = 100, before = null) {
+      return channel.messages
         .fetch({ limit, before })
-        .then(msgs => {
+        .then((msgs) => {
           if (msgs.size === 0) {
             return;
           }
           allMessages = allMessages.concat(msgs);
-          //temp
-          msgs.forEach(msg => {
-            if (idSet.has(msg.id)) {
-              fails++;
-            }
-            idSet.add(msg.id);
-          });
           const limit = Math.min(100, MESSAGELIMIT - allMessages.size);
           const before = msgs.last().id;
           if (limit > 0) {
-            return fetchAllMsgs(limit, before);
+            return fetchChannelMsgs(channel, limit, before);
           }
         })
-        .catch(err => {
+        .catch((err) => {
           //idk what errors might appear
           console.error(err);
         });
@@ -48,10 +48,14 @@ module.exports = {
     // indicate start of training
 
     console.log("Fetching messages...");
-    fetchAllMsgs().then(() => {
-      console.log("messages size: ", allMessages.size);
+    Promise.all(
+      channels.map((ch) => {
+        return fetchChannelMsgs(ch);
+      })
+    ).then(() => {
+      console.log("Total messages:", allMessages.size);
       console.log("Building chains...");
-      allMessages.forEach(msg => {
+      allMessages.forEach((msg) => {
         const id = msg.author.id;
         const content = msg.content;
         if (!chains.has(id)) {
@@ -61,15 +65,20 @@ module.exports = {
       });
       console.log("Training...");
       chains.forEach((chain, id) => {
-        const name = message.client.users.cache.get(id).username;
-        console.log({ name });
+        console.log({ id });
+        const user = message.client.users.cache.get(id);
+        if (!user) {
+          return;
+        }
+        const name = user.username || "";
         chain.train(3);
         result = chain.generateRandom(300);
-        reply += `${name}: ${result}\n`;
-        // console.log("user obj:", message.client.users.cache.get(id));
-        // console.log("chain:", chain);
+        result = result.replace("`", "");
+        result = result || "Empty result!";
+        console.log({ name, result });
+        reply += `${name}: \`${result}\`\n`;
       });
       message.channel.send(reply);
     });
-  }
+  },
 };
