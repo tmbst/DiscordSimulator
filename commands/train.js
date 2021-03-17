@@ -3,7 +3,7 @@ const Discord = require("discord.js");
 const store = require("../store/store");
 const { strToUserID } = require("../util");
 let chains;
-const MESSAGELIMIT = 500;
+const MESSAGELIMIT = 1000;
 
 module.exports = {
   name: "train",
@@ -37,13 +37,13 @@ module.exports = {
     let allMessages = new Discord.Collection();
 
     function fetchChannelMsgs(channel, limit = 100, before = null) {
-      console.log({ channel });
       return channel.messages
         .fetch({ limit, before })
         .then((msgs) => {
           if (msgs.size === 0) {
             return;
           }
+          console.log(`${((allMessages.size * 1.0) / MESSAGELIMIT) * 100}%`);
           allMessages = allMessages.concat(msgs);
           const limit = Math.min(100, MESSAGELIMIT - allMessages.size);
           const before = msgs.last().id;
@@ -86,8 +86,8 @@ module.exports = {
         }
         const name = user.username || "";
         usernames.push(name);
-        chain.train(3);
-        store.setUserChain;
+        chain.train(5);
+        store.setUserChain(message.guild.id, id, chain);
       });
       message.channel.send(
         `Success. Trained models for: ${usernames.join(", ")}`
