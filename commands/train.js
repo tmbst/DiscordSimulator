@@ -1,31 +1,49 @@
 const Markov = require("js-markov");
 const Discord = require("discord.js");
-var markov = new Markov();
+const store = require("../store/store");
 let chains;
-const MESSAGELIMIT = 9000;
+const MESSAGELIMIT = 500;
+
+function strToUserID(str) {
+  const start = str.lastIndexOf("!");
+  const end = str.lastIndexOf(">");
+  if (start === -1 || end === -1) return "";
+  return str.substring(start + 1, end);
+}
 
 module.exports = {
   name: "train",
   description:
-    "Read previous messages on the server and train markov chains for each user",
+    "Read previous messages on the server from a specific user and train a model for them",
   guildOnly: true,
   cooldown: 10,
   execute(message, args) {
-    let reply = "";
     chains = new Map();
+    const guildID = message.guild.id;
+    const members = message.guild.members.cache;
+    const ids = args
+      .map((str) => strToUserID(str))
+      .filter((id) => members.has(id));
+    if (ids.length === 0) {
+      return message.channel.send(
+        "Please specify a user or users to train upon"
+      );
+    }
+    let channelIDs = store.getChannels(guildID);
+    if (channelIDs.length === 0) {
+      return message.channel.send(
+        "No channels have been enabled. Use the toggle command to enable some text channels for training."
+      );
+    }
+    let channels = channelIDs.map((id) => {
+      return message.guild.channels.cache.find((ch) => {
+        return ch.id === id;
+      });
+    });
     let allMessages = new Discord.Collection();
 
-    let channels = message.guild.channels.cache.filter((ch) => {
-      return ch.type === "text" && ch.viewable;
-    });
-    console.log(
-      "channels: ",
-      channels.map((ch) => {
-        return ch.name;
-      })
-    );
-
     function fetchChannelMsgs(channel, limit = 100, before = null) {
+      console.log({ channel });
       return channel.messages
         .fetch({ limit, before })
         .then((msgs) => {
@@ -40,7 +58,6 @@ module.exports = {
           }
         })
         .catch((err) => {
-          //idk what errors might appear
           console.error(err);
         });
     }
@@ -55,30 +72,31 @@ module.exports = {
     ).then(() => {
       console.log("Total messages:", allMessages.size);
       console.log("Building chains...");
-      allMessages.forEach((msg) => {
-        const id = msg.author.id;
-        const content = msg.content;
-        if (!chains.has(id)) {
-          chains.set(id, new Markov());
-        }
-        chains.get(id).addStates(content);
+
+      ids.forEach((id) => {
+        msgs = allMessages.filter((msg) => msg.author.id === id);
+        msgs.forEach((msg) => {
+          const content = msg.content;
+          if (!chains.has(id)) {
+            chains.set(id, new Markov());
+          }
+          chains.get(id).addStates(content);
+        });
       });
       console.log("Training...");
+      const usernames = [];
       chains.forEach((chain, id) => {
-        console.log({ id });
         const user = message.client.users.cache.get(id);
         if (!user) {
           return;
         }
         const name = user.username || "";
+        usernames.push(name);
         chain.train(3);
-        result = chain.generateRandom(300);
-        result = result.replace("`", "");
-        result = result || "Empty result!";
-        console.log({ name, result });
-        reply += `${name}: \`${result}\`\n`;
       });
-      message.channel.send(reply);
+      message.channel.send(
+        `Success. Trained models for: ${usernames.join(", ")}`
+      );
     });
   },
 };
