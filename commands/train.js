@@ -15,9 +15,7 @@ module.exports = {
     chains = new Map();
     const guildID = message.guild.id;
     const members = message.guild.members.cache;
-    const ids = args
-      .map((str) => strToUserID(str))
-      .filter((id) => members.has(id));
+    const ids = message.mentions.users.array().map((user) => user.id);
     if (ids.length === 0) {
       return message.channel.send(
         "Please specify a user or users to train upon"

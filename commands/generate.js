@@ -8,14 +8,13 @@ module.exports = {
   guildOnly: true,
   cooldown: 2,
   execute(message, args) {
-    console.log({ message, args });
-    if (args.length !== 1) {
+    const mentions = message.mentions.users.array();
+    if (mentions.length !== 1) {
       return message.channel.send(
         "Please specify one user to generate a message for"
       );
     }
-    const id = strToUserID(args[0]);
-    console.log({ id });
+    const id = mentions[0].id;
     if (!id) {
       return message.channel.send("Please specify a valid user");
     }
