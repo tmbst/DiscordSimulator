@@ -14,10 +14,8 @@ module.exports = {
   isObject(obj) {
     const type = typeof obj;
     if (type !== "object" || obj === null) {
-      return new TypeError(
-        `Data should be a non null object. Instead received ${type}`
-      );
+      return false;
     }
-    return null;
+    return true;
   },
 };

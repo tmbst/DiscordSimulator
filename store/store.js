@@ -36,7 +36,9 @@ module.exports = {
   setGuildData(guildID, data) {
     const err = isObject(data);
     if (err) {
-      throw err;
+      throw new TypeError(
+        `setGuildData: Data should be a non null object. Instead received ${type}`
+      );
     }
     console.log({ data });
     diskData[guildID] = data;
@@ -47,7 +49,9 @@ module.exports = {
   setChains(guildID, chains) {
     const err = isObject(chains);
     if (err) {
-      throw err;
+      throw new TypeError(
+        `setChains: Data should be a non null object. Instead received ${type}`
+      );
     }
     const guildData = this.getGuildData(guildID);
     guildData.chains = chains;
@@ -59,6 +63,7 @@ module.exports = {
   setUserChain(guildID, userID, chain) {
     // TODO save chain data correctly - can't save object directly and also write to disk
     const chains = this.getChains(guildID);
+
     chains[userID] = chain;
     this.setChains(guildID, chains);
   },
