@@ -1,15 +1,9 @@
 const Markov = require("js-markov");
 const Discord = require("discord.js");
 const store = require("../store/store");
+const { strToUserID } = require("../util");
 let chains;
 const MESSAGELIMIT = 500;
-
-function strToUserID(str) {
-  const start = str.lastIndexOf("!");
-  const end = str.lastIndexOf(">");
-  if (start === -1 || end === -1) return "";
-  return str.substring(start + 1, end);
-}
 
 module.exports = {
   name: "train",
@@ -93,6 +87,7 @@ module.exports = {
         const name = user.username || "";
         usernames.push(name);
         chain.train(3);
+        store.setUserChain;
       });
       message.channel.send(
         `Success. Trained models for: ${usernames.join(", ")}`

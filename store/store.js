@@ -1,6 +1,7 @@
 const fs = require("fs");
 const dataPath = "./data.json";
 const absoluteDataPath = `./store/${dataPath}`;
+const { isObject } = require("../util");
 
 /*
  * const blueprint = {
@@ -18,16 +19,6 @@ try {
   diskData = require(dataPath);
 } catch (err) {
   console.log("Store: no data found. A new one will be made.");
-}
-
-function isObject(obj) {
-  const type = typeof obj;
-  if (type !== "object" || obj === null) {
-    return new TypeError(
-      `Data should be a non null object. Instead received ${type}`
-    );
-  }
-  return null;
 }
 
 module.exports = {
@@ -66,8 +57,10 @@ module.exports = {
     return this.getChains(guildID)[userID] || null;
   },
   setUserChain(guildID, userID, chain) {
-    // TODO save chain data - can't save object directly
-    throw new Error("Unimplemented");
+    // TODO save chain data correctly - can't save object directly and also write to disk
+    const chains = this.getChains(guildID);
+    chains[userID] = chain;
+    this.setChains(guildID, chains);
   },
   getChannels(guildID) {
     return this.getGuildData(guildID).channels || [];

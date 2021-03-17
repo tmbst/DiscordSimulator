@@ -1,11 +1,5 @@
 const store = require("../store/store");
-
-function strToChannelID(str) {
-  const start = str.lastIndexOf("#");
-  const end = str.lastIndexOf(">");
-  if (start === -1 || end === -1) return "";
-  return str.substring(start + 1, end);
-}
+const { strToChannelID } = require("../util");
 
 module.exports = {
   name: "toggle",
