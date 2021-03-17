@@ -1,5 +1,4 @@
 const store = require("../store/store");
-const { strToChannelID } = require("../util");
 
 module.exports = {
   name: "toggle",
@@ -8,21 +7,17 @@ module.exports = {
   guildOnly: true,
   cooldown: 1,
   execute(message, args) {
-    console.log({ args });
-    if (args.length === 0) {
-      return message.channel.send("Please specify some text channels");
-    }
-    guildChannels = message.guild.channels.cache.filter((channel) => {
+    const possibleChannels = message.guild.channels.cache.filter((channel) => {
       return channel.type === "text" && channel.viewable;
     });
-    toggleChannels = args
-      .map((arg) => {
-        return strToChannelID(arg);
+    const toggleChannels = message.mentions.channels
+      .filter((ch) => {
+        return possibleChannels.has(ch.id);
       })
-      .filter((id) => {
-        return guildChannels.has(id);
-      });
-    console.log({ toggleChannels });
+      .map((ch) => ch.id);
+    if (toggleChannels.length === 0) {
+      return message.channel.send("Please specify some text channels");
+    }
     toggleChannels.forEach((id) => {
       store.toggleChannel(message.guild.id, id);
     });

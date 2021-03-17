@@ -1,5 +1,4 @@
 const store = require("../store/store");
-const { strToUserID } = require("../util");
 
 module.exports = {
   name: "generate",

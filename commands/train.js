@@ -1,7 +1,6 @@
 const Markov = require("js-markov");
 const Discord = require("discord.js");
 const store = require("../store/store");
-const { strToUserID } = require("../util");
 let chains;
 const MESSAGELIMIT = 1000;
 
